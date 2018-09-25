@@ -72,6 +72,8 @@ namespace WindowsFormsApp2
             res[2] = (byte)(V * 255);
             return res;
         }
+
+
         private void GetDefValues() {
            // var g = Graphics.FromImage(pictureBox1.Image);
             bmp = pictureBox1.Image as Bitmap;
@@ -144,7 +146,7 @@ namespace WindowsFormsApp2
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             activate_flag = false;
-            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.Image = System.Drawing.Image.FromFile(openFileDialog1.FileName);
             GetDefValues();
 
@@ -243,9 +245,7 @@ namespace WindowsFormsApp2
                     disp_hsvValues[counter + 2] = (byte)(((int)hsvValues[counter + 2]) * scale_val);
 
                 byte[] rgbpixel = GetRGB(disp_hsvValues[counter], disp_hsvValues[counter + 1], disp_hsvValues[counter + 2]);
-                byte[] old_pixel = new byte[3];
-                for (int i = 0; i < 3; ++i)
-                    old_pixel[i] = disp_rgbValues[counter + i];
+                
 
                 for (int i = 0; i< 3;++i)
                     disp_rgbValues[counter+i] = rgbpixel[i];
@@ -265,6 +265,32 @@ namespace WindowsFormsApp2
         private void save_Click(object sender, EventArgs e)
         {
             saveFileDialog1.ShowDialog();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            activate_flag = false;
+            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            System.Drawing.Imaging.BitmapData bmpData =
+                bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadWrite,
+                bmp.PixelFormat);
+
+            IntPtr ptr = bmpData.Scan0;
+            int bytes = Math.Abs(bmpData.Stride) * bmp.Height;
+            System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
+           // System.Runtime.InteropServices.Marshal.Copy(ptr, disp_rgbValues, 0, bytes);
+            bmp.UnlockBits(bmpData);
+            for (int i = 0; i < rgbValues.Length; i++) {
+                disp_rgbValues[i] = rgbValues[i];
+                disp_hsvValues[i] = hsvValues[i];
+            }
+
+            trackBarHUE.Value = avg_h;
+            trackBarSat.Value = avg_s;
+            trackBarBr.Value = avg_v;
+
+            activate_flag = true;
+            Refresh();
         }
     }
 }
